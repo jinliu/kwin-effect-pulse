@@ -1,0 +1,15 @@
+#!/bin/sh
+rm -rfd build
+mkdir build
+cd build
+echo "Configuring... please wait"
+PREFIX=`kde4-config --prefix`
+if cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_BUILD_TYPE=Release ..; then
+   echo ""
+   echo 'Done, now "cd build; make && sudo make install"'
+else
+   echo "Configuration failed :-("
+   if [ ! -e `kde4-config --path include`/kwineffects.h ]; then
+	echo "It seems you miss at least the headers from the kdebase-dev or kdebase-workspace-dev package!"
+   fi
+fi
