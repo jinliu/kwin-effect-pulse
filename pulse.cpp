@@ -22,6 +22,22 @@ namespace KWin
 
 KWIN_EFFECT( pulse, PulseEffect )
 
+PulseEffect::PulseEffect()
+    {
+    reconfigure( ReconfigureAll );
+    }
+
+void PulseEffect::reconfigure( ReconfigureFlags )
+    {
+    KConfigGroup conf = EffectsHandler::effectConfig("Pulse");
+    mZoomDuration = conf.readEntry("ZoomDuration", 250);
+    mPulseDuration = conf.readEntry("PulseDuration", 300);
+    mPulseSizeRatio = conf.readEntry("PulseSizeRatio", 1.3);
+    QString disableForWindowClass = conf.readEntry("DisableForWindowClass", "yakuake;plasma-desktop");
+    foreach ( QString i, disableForWindowClass.split(";") )
+        mDisableForWindowClass.insert(i);
+    }
+
 void PulseEffect::prePaintScreen( ScreenPrePaintData& data, int time )
     {
     if( !mTimeLineWindows.isEmpty() )
@@ -33,9 +49,18 @@ void PulseEffect::prePaintWindow( EffectWindow* w, WindowPrePaintData& data, int
     {
     if( mTimeLineWindows.contains( w ) )
         {
-        mTimeLineWindows[ w ].addTime( time );
-        if( mTimeLineWindows[ w ].value() < 1 )
+        mTimeLineWindows[ w ].second.addTime( time );
+        if( mTimeLineWindows[ w ].second.value() < 1 )
             data.setTransformed();
+        else if ( !mTimeLineWindows[ w ].first )
+            { // zoom complete, now pulse
+            mTimeLineWindows[ w ].first = true;
+            TimeLine& t = mTimeLineWindows[ w ].second;
+            t.setCurveShape( TimeLine::EaseOutCurve );
+            t.setDuration( animationTime( mPulseDuration ) );
+            t.setProgress( 0.0 );
+            data.setTransformed();
+            }
         else
             mTimeLineWindows.remove( w );
         }
@@ -46,9 +71,9 @@ void PulseEffect::paintWindow( EffectWindow* w, int mask, QRegion region, Window
     {
     if( mTimeLineWindows.contains( w ) && isPulseWindow( w ) )
         {
-            if ( mTimeLineWindows[ w ].value() < 0.5 )
+            if ( !mTimeLineWindows[ w ].first )
             { // 1st part: zoom
-                double scale = mTimeLineWindows[ w ].value() * 2;
+                double scale = mTimeLineWindows[ w ].second.value();
                 data.opacity *= scale;
                 data.xScale *= scale;
                 data.yScale *= scale;
@@ -59,8 +84,8 @@ void PulseEffect::paintWindow( EffectWindow* w, int mask, QRegion region, Window
             else
             { // 2nd part: pulse
                 effects->paintWindow( w, mask, region, data );
-                double scale = 1.0 + ( mTimeLineWindows[ w ].value() - 0.5 ) * 2 * 0.3;
-                data.opacity *= 1.0 - ( mTimeLineWindows[ w ].value() - 0.5 ) * 2;
+                double scale = 1.0 + mTimeLineWindows[ w ].second.value() * ( mPulseSizeRatio - 1.0 );
+                data.opacity *= 1.0 - mTimeLineWindows[ w ].second.value();
                 data.xScale *= scale;
                 data.yScale *= scale;
                 data.xTranslate += int( w->width() / 2 * ( 1 - scale ) );
@@ -68,7 +93,7 @@ void PulseEffect::paintWindow( EffectWindow* w, int mask, QRegion region, Window
                 effects->paintWindow( w, mask, region, data );
             }
         }
-    else
+    else // disable effect
         effects->paintWindow( w, mask, region, data );        
     }
 
@@ -77,6 +102,9 @@ bool PulseEffect::isPulseWindow( EffectWindow* w )
     const void* e = w->data( WindowAddedGrabRole ).value<void*>();
     if ( w->isPopupMenu() || w->isSpecialWindow() || w->isUtility() || ( e && e != this ))
         return false;
+    foreach ( QString i , w->windowClass().split(" ") )
+        if ( mDisableForWindowClass.contains( i ) )
+            return false;
     return true;
     }
 
@@ -91,9 +119,11 @@ void PulseEffect::windowAdded( EffectWindow* c )
     {
     if( c->isOnCurrentDesktop())
         {
-        mTimeLineWindows[ c ].setCurveShape( TimeLine::EaseOutCurve );
-        mTimeLineWindows[ c ].setDuration( animationTime( 500 ));
-        mTimeLineWindows[ c ].setProgress( 0.0 );
+        mTimeLineWindows[ c ].first = false; // zoom
+        TimeLine& t = mTimeLineWindows[ c ].second;
+        t.setCurveShape( TimeLine::LinearCurve );
+        t.setDuration( animationTime( mZoomDuration ) );
+        t.setProgress( 0.0 );
         c->addRepaintFull();
         }
     }

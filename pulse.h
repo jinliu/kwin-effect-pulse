@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <kwineffects.h>
 
+#include <utility>
+
 namespace KWin
 {
 
@@ -27,6 +29,8 @@ class PulseEffect
     : public Effect
     {
     public:
+        PulseEffect();
+        virtual void reconfigure( ReconfigureFlags );
         virtual void prePaintScreen( ScreenPrePaintData& data, int time );
         virtual void prePaintWindow( EffectWindow* w, WindowPrePaintData& data, int time );
         virtual void paintWindow( EffectWindow* w, int mask, QRegion region, WindowPaintData& data );
@@ -36,7 +40,12 @@ class PulseEffect
         virtual void windowClosed( EffectWindow* c );
     private:
         bool isPulseWindow ( EffectWindow* w );
-        QHash< const EffectWindow*, TimeLine > mTimeLineWindows;
+        QHash< const EffectWindow*, std::pair<bool, TimeLine> > mTimeLineWindows;
+
+        int mZoomDuration;
+        int mPulseDuration;
+        double mPulseSizeRatio;
+        QSet< QString > mDisableForWindowClass;
     };
 
 } // namespace
