@@ -99,13 +99,18 @@ void PulseEffect::paintWindow( EffectWindow* w, int mask, QRegion region, Window
 
 bool PulseEffect::isPulseWindow( EffectWindow* w )
     {
-    const void* e = w->data( WindowAddedGrabRole ).value<void*>();
-    if ( !(w->isNormalWindow() || w->isDialog()) || ( e && e != this ) )
-        return false;
-    foreach ( QString i , w->windowClass().split(" ") )
-        if ( mDisableForWindowClass.contains( i ) )
+    if ( w->isManaged() && ( w->isNormalWindow() || w->isDialog() ) )
+        {
+        const void* e = w->data( WindowAddedGrabRole ).value<void*>();
+        if ( e && e != this )
             return false;
-    return true;
+        foreach ( QString i , w->windowClass().split(" ") )
+            if ( mDisableForWindowClass.contains( i ) )
+                return false;
+        return true;
+        }
+    else
+        return false;
     }
 
 void PulseEffect::postPaintWindow( EffectWindow* w )

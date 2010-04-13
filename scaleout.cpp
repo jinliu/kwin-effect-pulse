@@ -87,13 +87,18 @@ void ScaleOutEffect::postPaintWindow( EffectWindow* w )
 
 bool ScaleOutEffect::isScaleOutWindow( EffectWindow* w )
     {
-    const void* e = w->data( WindowClosedGrabRole ).value<void*>();
-    if ( !(w->isNormalWindow() || w->isDialog()) || ( e && e != this ) )
-        return false;
-    foreach ( QString i , w->windowClass().split(" ") )
-        if ( mDisableForWindowClass.contains( i ) )
+    if ( w->isManaged() && ( w->isNormalWindow() || w->isDialog() ) )
+        {
+        const void* e = w->data( WindowAddedGrabRole ).value<void*>();
+        if ( e && e != this )
             return false;
-    return true;
+        foreach ( QString i , w->windowClass().split(" ") )
+            if ( mDisableForWindowClass.contains( i ) )
+                return false;
+        return true;
+        }
+    else
+        return false;
     }
 
 void ScaleOutEffect::windowClosed( EffectWindow* w )
