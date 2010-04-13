@@ -87,7 +87,7 @@ void ScaleOutEffect::postPaintWindow( EffectWindow* w )
 
 bool ScaleOutEffect::isScaleOutWindow( EffectWindow* w )
     {
-    if ( w->isManaged() && ( w->isNormalWindow() || w->isDialog() ) )
+    if ( w->hasDecoration() && ( w->isNormalWindow() || w->isDialog() ) )
         {
         const void* e = w->data( WindowAddedGrabRole ).value<void*>();
         if ( e && e != this )
