@@ -69,28 +69,28 @@ void PulseEffect::prePaintWindow( EffectWindow* w, WindowPrePaintData& data, int
 
 void PulseEffect::paintWindow( EffectWindow* w, int mask, QRegion region, WindowPaintData& data )
     {
-    if( mTimeLineWindows.contains( w ) && isPulseWindow( w ) )
+    if( mTimeLineWindows.contains( w ) )
         {
-            if ( !mTimeLineWindows[ w ].first )
+        if ( !mTimeLineWindows[ w ].first )
             { // 1st part: zoom
-                double scale = mTimeLineWindows[ w ].second.value();
-                data.opacity *= scale;
-                data.xScale *= scale;
-                data.yScale *= scale;
-                data.xTranslate += int( w->width() / 2 * ( 1 - scale ) );
-                data.yTranslate += int( w->height() / 2 * ( 1 - scale ) );
-                effects->paintWindow( w, mask, region, data );
+            double scale = mTimeLineWindows[ w ].second.value();
+            data.opacity *= scale;
+            data.xScale *= scale;
+            data.yScale *= scale;
+            data.xTranslate += int( w->width() / 2 * ( 1 - scale ) );
+            data.yTranslate += int( w->height() / 2 * ( 1 - scale ) );
+            effects->paintWindow( w, mask, region, data );
             }
-            else
+        else
             { // 2nd part: pulse
-                effects->paintWindow( w, mask, region, data );
-                double scale = 1.0 + mTimeLineWindows[ w ].second.value() * ( mPulseSizeRatio - 1.0 );
-                data.opacity *= 1.0 - mTimeLineWindows[ w ].second.value();
-                data.xScale *= scale;
-                data.yScale *= scale;
-                data.xTranslate += int( w->width() / 2 * ( 1 - scale ) );
-                data.yTranslate += int( w->height() / 2 * ( 1 - scale ) );
-                effects->paintWindow( w, mask, region, data );
+            effects->paintWindow( w, mask, region, data );
+            double scale = 1.0 + mTimeLineWindows[ w ].second.value() * ( mPulseSizeRatio - 1.0 );
+            data.opacity *= 1.0 - mTimeLineWindows[ w ].second.value();
+            data.xScale *= scale;
+            data.yScale *= scale;
+            data.xTranslate += int( w->width() / 2 * ( 1 - scale ) );
+            data.yTranslate += int( w->height() / 2 * ( 1 - scale ) );
+            effects->paintWindow( w, mask, region, data );
             }
         }
     else // disable effect
@@ -100,7 +100,7 @@ void PulseEffect::paintWindow( EffectWindow* w, int mask, QRegion region, Window
 bool PulseEffect::isPulseWindow( EffectWindow* w )
     {
     const void* e = w->data( WindowAddedGrabRole ).value<void*>();
-    if ( w->isPopupMenu() || w->isSpecialWindow() || w->isUtility() || ( e && e != this ))
+    if ( !(w->isNormalWindow() || w->isDialog()) || ( e && e != this ) )
         return false;
     foreach ( QString i , w->windowClass().split(" ") )
         if ( mDisableForWindowClass.contains( i ) )
@@ -115,22 +115,22 @@ void PulseEffect::postPaintWindow( EffectWindow* w )
     effects->postPaintWindow( w );
     }
 
-void PulseEffect::windowAdded( EffectWindow* c )
+void PulseEffect::windowAdded( EffectWindow* w )
     {
-    if( c->isOnCurrentDesktop())
+    if( w->isOnCurrentDesktop() && isPulseWindow(w) )
         {
-        mTimeLineWindows[ c ].first = false; // zoom
-        TimeLine& t = mTimeLineWindows[ c ].second;
+        mTimeLineWindows[ w ].first = false; // zoom
+        TimeLine& t = mTimeLineWindows[ w ].second;
         t.setCurveShape( TimeLine::LinearCurve );
         t.setDuration( animationTime( mZoomDuration ) );
         t.setProgress( 0.0 );
-        c->addRepaintFull();
+        w->addRepaintFull();
         }
     }
 
-void PulseEffect::windowClosed( EffectWindow* c )
+void PulseEffect::windowClosed( EffectWindow* w )
     {
-    mTimeLineWindows.remove( c );
+    mTimeLineWindows.remove( w );
     }
 
 } // namespace

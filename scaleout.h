@@ -15,36 +15,31 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *********************************************************************/
 
-#ifndef KWIN_PULSE_H
-#define KWIN_PULSE_H
+#ifndef KWIN_SCALEOUT_H
+#define KWIN_SCALEOUT_H
 
 #include <kwineffects.h>
-
-#include <utility>
 
 namespace KWin
 {
 
-class PulseEffect
+class ScaleOutEffect
     : public Effect
     {
     public:
-        PulseEffect();
+        ScaleOutEffect();
         virtual void reconfigure( ReconfigureFlags );
         virtual void prePaintScreen( ScreenPrePaintData& data, int time );
         virtual void prePaintWindow( EffectWindow* w, WindowPrePaintData& data, int time );
         virtual void paintWindow( EffectWindow* w, int mask, QRegion region, WindowPaintData& data );
         virtual void postPaintWindow( EffectWindow* w );
-        // TODO react also on virtual desktop changes
-        virtual void windowAdded( EffectWindow* c );
         virtual void windowClosed( EffectWindow* c );
+        virtual void windowDeleted( EffectWindow* c );
     private:
-        bool isPulseWindow( EffectWindow* w );
-        QHash< const EffectWindow*, std::pair<bool, TimeLine> > mTimeLineWindows;
+        bool isScaleOutWindow ( EffectWindow* w );
+        QHash< const EffectWindow*, TimeLine> mTimeLineWindows;
 
-        int mZoomDuration;
-        int mPulseDuration;
-        double mPulseSizeRatio;
+        int mDuration;
         QSet< QString > mDisableForWindowClass;
     };
 

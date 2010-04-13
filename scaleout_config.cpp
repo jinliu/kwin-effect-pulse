@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *********************************************************************/
 
-#include "pulse_config.h"
+#include "scaleout_config.h"
 
 #include <kwineffects.h>
 
@@ -31,69 +31,59 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace KWin
 {
 
-KWIN_EFFECT_CONFIG( pulse, PulseEffectConfig )
+KWIN_EFFECT_CONFIG( scaleout, ScaleOutEffectConfig )
 
-PulseEffectConfigForm::PulseEffectConfigForm(QWidget* parent) : QWidget(parent)
+ScaleOutEffectConfigForm::ScaleOutEffectConfigForm(QWidget* parent) : QWidget(parent)
     {
     setupUi(this);
     }
 
-PulseEffectConfig::PulseEffectConfig(QWidget* parent, const QVariantList& args) :
+ScaleOutEffectConfig::ScaleOutEffectConfig(QWidget* parent, const QVariantList& args) :
     KCModule(EffectFactory::componentData(), parent, args)
     {
-    m_ui = new PulseEffectConfigForm(this);
+    m_ui = new ScaleOutEffectConfigForm(this);
 
     QVBoxLayout* layout = new QVBoxLayout(this);
 
     layout->addWidget(m_ui);
 
-    connect(m_ui->spinZoomDuration, SIGNAL(valueChanged(int)), this, SLOT(changed()));
-    connect(m_ui->spinPulseDuration, SIGNAL(valueChanged(int)), this, SLOT(changed()));
-    connect(m_ui->spinPulseSizeRatio, SIGNAL(valueChanged(double)), this, SLOT(changed()));
+    connect(m_ui->spinDuration, SIGNAL(valueChanged(int)), this, SLOT(changed()));
     connect(m_ui->editDisableForWindowClass, SIGNAL(textEdited(const QString &)), this, SLOT(changed()));
 
     load();
     }
 
-void PulseEffectConfig::load()
+void ScaleOutEffectConfig::load()
     {
     KCModule::load();
 
-    KConfigGroup conf = EffectsHandler::effectConfig("Pulse");
+    KConfigGroup conf = EffectsHandler::effectConfig("ScaleOut");
 
-    int zoomDuration = conf.readEntry("ZoomDuration", 250);
-    int pulseDuration = conf.readEntry("PulseDuration", 300);
-    double pulseSizeRatio = conf.readEntry("PulseSizeRatio", 1.3);
+    int zoomDuration = conf.readEntry("Duration", 250);
     QString disableForWindowClass = conf.readEntry("DisableForWindowClass", "yakuake;plasma-desktop");
-    m_ui->spinZoomDuration->setValue(zoomDuration);
-    m_ui->spinPulseDuration->setValue(pulseDuration);
-    m_ui->spinPulseSizeRatio->setValue(pulseSizeRatio);
+    m_ui->spinDuration->setValue(zoomDuration);
     m_ui->editDisableForWindowClass->setText(disableForWindowClass);
 
     emit changed(false);
     }
 
-void PulseEffectConfig::save()
+void ScaleOutEffectConfig::save()
     {
-    KConfigGroup conf = EffectsHandler::effectConfig("Pulse");
+    KConfigGroup conf = EffectsHandler::effectConfig("ScaleOut");
 
-    conf.writeEntry("ZoomDuration", m_ui->spinZoomDuration->value());
-    conf.writeEntry("PulseDuration", m_ui->spinPulseDuration->value());
-    conf.writeEntry("PulseSizeRatio", m_ui->spinPulseSizeRatio->value());
+    conf.writeEntry("Duration", m_ui->spinDuration->value());
     conf.writeEntry("DisableForWindowClass", m_ui->editDisableForWindowClass->text());
 
     conf.sync();
 
     KCModule::save();
     emit changed(false);
-    EffectsHandler::sendReloadMessage( "pulse" );
+    EffectsHandler::sendReloadMessage( "scaleout" );
     }
 
-void PulseEffectConfig::defaults()
+void ScaleOutEffectConfig::defaults()
     {
-    m_ui->spinZoomDuration->setValue(250);
-    m_ui->spinPulseDuration->setValue(300);
-    m_ui->spinPulseSizeRatio->setValue(1.3);
+    m_ui->spinDuration->setValue(250);
     m_ui->editDisableForWindowClass->setText("yakuake;plasma-desktop");
     emit changed(true);
     }
@@ -101,4 +91,4 @@ void PulseEffectConfig::defaults()
 
 } // namespace
 
-#include "pulse_config.moc"
+#include "scaleout_config.moc"

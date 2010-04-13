@@ -13,10 +13,7 @@ include_directories (${KDE4_INCLUDES})
 
 
 kde4_add_plugin(kwin4_effect_pulse pulse.cpp)
-
-
 target_link_libraries(kwin4_effect_pulse ${KDE4_KDEUI_LIBS} kwineffects ${X11_LIBRARIES})
-
 install(TARGETS kwin4_effect_pulse DESTINATION ${PLUGIN_INSTALL_DIR})
 install(FILES pulse.desktop DESTINATION ${SERVICES_INSTALL_DIR}/kwin )
 
@@ -28,3 +25,19 @@ kde4_add_plugin (kcm_kwin4_effect_pulse ${kcm_kwin4_effect_pulse_SOURCES} )
 target_link_libraries(kcm_kwin4_effect_pulse ${KDE4_KDEUI_LIBS} kwineffects )
 install (TARGETS kcm_kwin4_effect_pulse DESTINATION ${PLUGIN_INSTALL_DIR})
 install( FILES pulse_config.desktop DESTINATION ${SERVICES_INSTALL_DIR}/kwin )
+
+
+project(kwin4_effect_scaleout)
+kde4_add_plugin(kwin4_effect_scaleout scaleout.cpp)
+target_link_libraries(kwin4_effect_scaleout ${KDE4_KDEUI_LIBS} kwineffects ${X11_LIBRARIES})
+install(TARGETS kwin4_effect_scaleout DESTINATION ${PLUGIN_INSTALL_DIR})
+install(FILES scaleout.desktop DESTINATION ${SERVICES_INSTALL_DIR}/kwin )
+
+
+project (kcm_kwin4_effect_scaleout)
+set( kcm_kwin4_effect_scaleout_SOURCES scaleout_config.cpp )
+kde4_add_ui_files( kcm_kwin4_effect_scaleout_SOURCES scaleout_config.ui )
+kde4_add_plugin (kcm_kwin4_effect_scaleout ${kcm_kwin4_effect_scaleout_SOURCES} )
+target_link_libraries(kcm_kwin4_effect_scaleout ${KDE4_KDEUI_LIBS} kwineffects )
+install (TARGETS kcm_kwin4_effect_scaleout DESTINATION ${PLUGIN_INSTALL_DIR})
+install( FILES scaleout_config.desktop DESTINATION ${SERVICES_INSTALL_DIR}/kwin )
